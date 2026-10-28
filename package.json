@@ -1,7 +1,7 @@
 {
   "name": "dbridge",
   "version": "0.1.0",
-  "description": "Ouvre une base Cloud SQL via un proxy local, dans l'interface de ton choix.",
+  "description": "Open a Cloud SQL database through a local proxy, in the GUI you choose.",
   "type": "module",
   "bin": {
     "dbridge": "./bin/dbridge.js"

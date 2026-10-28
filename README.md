@@ -1,10 +1,10 @@
 # dbridge
 
-Ouvre une base Cloud SQL à travers un proxy local, dans l'interface que tu choisis. Le paquet ne stocke aucun mot de passe : la session Google de la machine authentifie la connexion.
+Open a Cloud SQL database through a local proxy, in the GUI you choose. The package stores no passwords: the machine's Google session authenticates the connection.
 
 ## Installation
 
-Node.js 20 ou plus récent est requis.
+Node.js 20 or newer is required.
 
 ```bash
 git clone https://github.com/Maxencergn/dbridge.git
@@ -12,22 +12,22 @@ cd dbridge
 npm link
 ```
 
-Au premier `dbridge start`, `gcloud` et `cloud-sql-proxy` sont téléchargés dans `~/.local/share/dbridge/tools` s'ils ne sont pas déjà installés. Les archives officielles sont vérifiées par leur somme SHA256.
+On the first `dbridge start`, `gcloud` and `cloud-sql-proxy` are downloaded into `~/.local/share/dbridge/tools` if they are not already installed. Official archives are checked against their SHA256 checksum.
 
-## Première utilisation
+## First run
 
-`dbridge start` enchaîne le setup s'il n'y a pas encore de configuration :
+`dbridge start` runs setup when there is no configuration yet:
 
-1. installation de `gcloud` et `cloud-sql-proxy` s'ils manquent ;
-2. connexion Google dans le navigateur ;
-3. choix des projets GCP ;
-4. choix de l'interface (Beekeeper Studio, TablePlus, DBeaver, l'application enregistrée pour `postgresql://`, ou l'affichage de l'URL).
+1. install `gcloud` and `cloud-sql-proxy` if they are missing;
+2. Google sign-in in the browser;
+3. pick the GCP projects;
+4. pick the interface (Beekeeper Studio, TablePlus, DBeaver, the app registered for `postgresql://`, or print the URL).
 
-La configuration est écrite dans `~/.config/dbridge/config.json`. `dbridge init` la refait.
+The configuration is written to `~/.config/dbridge/config.json`. `dbridge init` rewrites it.
 
-Le compte Google doit déjà exister comme utilisateur Cloud SQL IAM, avec les droits voulus sur les bases. dbridge peut créer l'utilisateur IAM, il n'accorde pas les droits sur les tables.
+The Google account must already exist as a Cloud SQL IAM user, with the rights you want on the databases. dbridge can create the IAM user. It does not grant table privileges.
 
-## Commandes
+## Commands
 
 ```text
 dbridge list
@@ -44,6 +44,6 @@ dbridge stop all
 dbridge stop prod speeral
 ```
 
-Le proxy reste lancé après la fermeture du terminal. `dbridge stop` l'arrête.
+The proxy keeps running after the terminal closes. `dbridge stop` stops it.
 
-macOS, Windows et Linux utilisent le même paquet. L'ouverture de l'interface passe par la commande enregistrée dans la configuration.
+macOS, Windows, and Linux use the same package. The interface is opened with the command stored in the configuration.

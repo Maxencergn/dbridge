@@ -61,7 +61,7 @@ function proxyError(text) {
     if (line.startsWith("WARNING:")) continue;
     lines.push(line);
   }
-  return lines.join("\n").trim() || "Le proxy n'a pas démarré.";
+  return lines.join("\n").trim() || "The proxy did not start.";
 }
 
 async function allocatePort(reserved) {
@@ -69,11 +69,11 @@ async function allocatePort(reserved) {
     if (reserved.has(port) || !(await portFree(port))) continue;
     return port;
   }
-  throw new Error("Aucun port libre entre 5433 et 5499.");
+  throw new Error("No free port between 5433 and 5499.");
 }
 
 export async function stopProxy(connectionName) {
-  if (!CONNECTION_NAME.test(connectionName)) throw new Error("Nom de connexion invalide.");
+  if (!CONNECTION_NAME.test(connectionName)) throw new Error("Invalid connection name.");
   const state = await readState();
   const proxy = state.proxies?.[connectionName];
   if (!proxy) return;
@@ -96,12 +96,12 @@ export async function rememberDatabase(connectionName, database) {
 }
 
 export async function startProxy(connectionName, env) {
-  if (!CONNECTION_NAME.test(connectionName)) throw new Error("Nom de connexion invalide.");
+  if (!CONNECTION_NAME.test(connectionName)) throw new Error("Invalid connection name.");
   if (!connectionName.startsWith(`${env.project}:`)) {
-    throw new Error("Cet environnement ne correspond pas à l'instance.");
+    throw new Error("This environment does not match the instance.");
   }
   const bin = await proxyBin();
-  if (!bin) throw new Error("cloud-sql-proxy est introuvable.");
+  if (!bin) throw new Error("cloud-sql-proxy was not found.");
   let proxies = await reconcileProxies();
   const project = connectionName.split(":")[0];
   const existing = proxies[connectionName];
@@ -162,7 +162,7 @@ export async function ensureIamUser(connectionName, email) {
   const users = await gcloudJson(["sql", "users", "list", `--instance=${instance}`, `--project=${project}`, "--format=json"]);
   const rows = Array.isArray(users) ? users : [];
   if (rows.some((user) => user.name === email && user.type === "CLOUD_IAM_USER")) return;
-  console.log(`Ajout de ${email} comme utilisateur IAM de ${instance}…`);
+  console.log(`Adding ${email} as an IAM user of ${instance}…`);
   try {
     await gcloud([
       "sql",
@@ -179,6 +179,6 @@ export async function ensureIamUser(connectionName, email) {
 }
 
 export function proxyLabel(name, proxy) {
-  const database = proxy.database || "base non précisée";
+  const database = proxy.database || "database not set";
   return `${proxy.env || ""} · ${proxy.instance || name} · ${database} · :${proxy.port}`;
 }

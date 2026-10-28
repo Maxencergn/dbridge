@@ -40,10 +40,10 @@ export async function proxyBin() {
 }
 
 async function download(url, destination, sha256) {
-  if (!sha256) throw new Error(`Somme de contrôle absente pour ${url}`);
+  if (!sha256) throw new Error(`Missing checksum for ${url}`);
   const response = await fetch(url);
   if (!response.ok || !response.body) {
-    throw new Error(`Téléchargement impossible (${response.status}) : ${url}`);
+    throw new Error(`Download failed (${response.status}): ${url}`);
   }
   await fs.mkdir(path.dirname(destination), { recursive: true });
   const hash = createHash("sha256");
@@ -53,14 +53,14 @@ async function download(url, destination, sha256) {
   const got = hash.digest("hex");
   if (got !== sha256) {
     await fs.rm(destination, { force: true });
-    throw new Error(`Somme de contrôle invalide pour ${path.basename(destination)}.`);
+    throw new Error(`Checksum mismatch for ${path.basename(destination)}.`);
   }
 }
 
 async function extract(archive) {
   const result = await run("tar", ["-xf", archive, "-C", toolsDir], { timeout: 180_000 });
   if (result.code !== 0) {
-    throw new Error(result.stderr.trim() || "Extraction impossible.");
+    throw new Error(result.stderr.trim() || "Extraction failed.");
   }
 }
 
@@ -70,28 +70,28 @@ export async function ensureTools() {
   if (!(await proxyBin())) await installProxy();
   const gcloud = await gcloudBin();
   const proxy = await proxyBin();
-  if (!gcloud || !proxy) throw new Error("gcloud ou cloud-sql-proxy est introuvable après installation.");
+  if (!gcloud || !proxy) throw new Error("gcloud or cloud-sql-proxy was not found after installation.");
   return { gcloud, proxy };
 }
 
 async function installProxy() {
   const build = proxyBuild();
   const archive = path.join(toolsDir, "bin", path.basename(build.file));
-  console.log(`Téléchargement de cloud-sql-proxy…`);
+  console.log("Downloading cloud-sql-proxy…");
   await download(proxyUrl(build.file), archive, build.sha256);
   const destination = bundledProxy();
   if (archive !== destination) await fs.rename(archive, destination);
   if (process.platform !== "win32") await fs.chmod(destination, 0o755);
-  console.log("cloud-sql-proxy installé.");
+  console.log("cloud-sql-proxy installed.");
 }
 
 async function installGcloud() {
   const archiveInfo = gcloudArchive();
   const archive = path.join(toolsDir, archiveInfo.file);
-  console.log(`Téléchargement de gcloud ${GCLOUD_VERSION}…`);
+  console.log(`Downloading gcloud ${GCLOUD_VERSION}…`);
   await download(gcloudUrl(archiveInfo.file), archive, archiveInfo.sha256);
   await fs.rm(path.join(toolsDir, "google-cloud-sdk"), { recursive: true, force: true });
-  console.log("Extraction de gcloud…");
+  console.log("Extracting gcloud…");
   await extract(archive);
   await fs.rm(archive, { force: true });
   const installer = path.join(toolsDir, "google-cloud-sdk", process.platform === "win32" ? "install.bat" : "install.sh");
@@ -104,7 +104,7 @@ async function installGcloud() {
           { timeout: 180_000 },
         );
   if (result.code !== 0) {
-    throw new Error(result.stderr.trim() || result.stdout.trim() || "L'installation de gcloud a échoué.");
+    throw new Error(result.stderr.trim() || result.stdout.trim() || "gcloud installation failed.");
   }
-  console.log("gcloud installé.");
+  console.log("gcloud installed.");
 }

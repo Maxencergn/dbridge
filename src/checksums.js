@@ -60,7 +60,7 @@ export const GCLOUD_ARCHIVES = {
 export function proxyBuild() {
   const build = PROXY_BUILDS[platformKey];
   if (!build) {
-    throw new Error(`cloud-sql-proxy n'a pas de binaire pour ${platformKey}.`);
+    throw new Error(`cloud-sql-proxy has no binary for ${platformKey}.`);
   }
   return build;
 }
@@ -68,7 +68,7 @@ export function proxyBuild() {
 export function gcloudArchive() {
   const archive = GCLOUD_ARCHIVES[platformKey];
   if (!archive) {
-    throw new Error(`gcloud n'a pas d'archive pour ${platformKey}.`);
+    throw new Error(`gcloud has no archive for ${platformKey}.`);
   }
   return archive;
 }

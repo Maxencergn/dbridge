@@ -40,5 +40,5 @@ export async function openInterface(email, port, database, iface) {
     await new Promise((resolve) => setTimeout(resolve, 1500));
   }
   launch(iface.command.map((part) => part.replaceAll("{url}", url)));
-  console.log(`${iface.name} s'ouvre sur ${database} avec ${email}.`);
+  console.log(`Opening ${iface.name} on ${database} as ${email}.`);
 }

@@ -17,10 +17,10 @@ export async function loadCatalog(config, refresh = false) {
       const sameProjects = catalog.projects === projectKey(config);
       if (fresh && sameProjects) return catalog;
     } catch {
-      // cache absent
+      // no cache
     }
   }
-  console.log("Recherche des instances…");
+  console.log("Looking up instances…");
   return fetchCatalog(config);
 }
 
@@ -73,7 +73,7 @@ export function envFromCatalog(catalog, envId) {
   const env = catalog.environments.find((item) => item.id === envId);
   if (!env) {
     const known = catalog.environments.map((item) => item.id).join(", ");
-    throw new Error(`Environnement inconnu. Utilise : ${known}`);
+    throw new Error(`Unknown environment. Use: ${known}`);
   }
   return env;
 }
@@ -94,12 +94,12 @@ export function findTarget(catalog, envId, token) {
   if (byDatabase.length === 1) return { env, instance: byDatabase[0], database: token };
   if (byDatabase.length > 1) {
     const choices = byDatabase.map((item) => `  ${envId} ${item.instance}`).join("\n");
-    throw new Error(`Plusieurs instances ont la base ${token} :\n${choices}`);
+    throw new Error(`Several instances have the database ${token}:\n${choices}`);
   }
   const known = env.instances
     .map((item) => `  ${item.instance}: ${item.databases.filter((name) => !isHidden(name)).join(", ")}`)
     .join("\n");
-  throw new Error(`Rien ne correspond à ${token} sur ${envId}.\n${known}`);
+  throw new Error(`Nothing matches ${token} on ${envId}.\n${known}`);
 }
 
 function isHidden(name) {

@@ -39,12 +39,12 @@ export function sortDatabases(names, preferred = []) {
 
 export function defaultInterface() {
   if (process.platform === "darwin") {
-    return { name: "Application par défaut", command: ["open", "{url}"] };
+    return { name: "Default application", command: ["open", "{url}"] };
   }
   if (process.platform === "win32") {
-    return { name: "Application par défaut", command: ["cmd", "/c", "start", "", "{url}"] };
+    return { name: "Default application", command: ["cmd", "/c", "start", "", "{url}"] };
   }
-  return { name: "Application par défaut", command: ["xdg-open", "{url}"] };
+  return { name: "Default application", command: ["xdg-open", "{url}"] };
 }
 
 export function detectInterfaces() {
@@ -61,7 +61,7 @@ export function detectInterfaces() {
     }
   }
   interfaces.push(defaultInterface());
-  interfaces.push({ name: "Afficher l'URL", command: null });
+  interfaces.push({ name: "Show the URL", command: null });
   return interfaces;
 }
 

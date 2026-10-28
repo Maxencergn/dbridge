@@ -3,7 +3,7 @@ import test from "node:test";
 import { sortDatabases } from "../src/config.js";
 import { postgresUrl } from "../src/open.js";
 
-test("l'adresse Postgres encode le compte et coupe SSL", () => {
+test("the Postgres URL encodes the account and disables SSL", () => {
   const url = postgresUrl("maxence@speeral.io", 5434, "speeral");
   assert.equal(
     url,
@@ -11,7 +11,7 @@ test("l'adresse Postgres encode le compte et coupe SSL", () => {
   );
 });
 
-test("les bases système passent après les bases préférées", () => {
+test("system databases sort after preferred databases", () => {
   assert.deepEqual(sortDatabases(["postgres", "nicky", "speeral", "prisma_shadow"], ["speeral"]), [
     "speeral",
     "nicky",

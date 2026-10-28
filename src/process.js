@@ -77,7 +77,7 @@ export function run(bin, args, { timeout = 90_000, input } = {}) {
     const stderr = [];
     const timer = setTimeout(() => {
       child.kill();
-      reject(new Error(`Délai dépassé : ${path.basename(bin)}`));
+      reject(new Error(`Timed out: ${path.basename(bin)}`));
     }, timeout);
     child.stdout.on("data", (chunk) => stdout.push(chunk));
     child.stderr.on("data", (chunk) => stderr.push(chunk));

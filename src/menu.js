@@ -10,7 +10,7 @@ function numbered(title, labels) {
     if (raw.toLowerCase() === "q") process.exit(0);
     const choice = Number(raw);
     if (!Number.isInteger(choice) || choice < 1 || choice > labels.length) {
-      console.log("Choix invalide.");
+      console.log("Invalid choice.");
       return numbered(title, labels);
     }
     return choice - 1;
@@ -40,7 +40,7 @@ function attachKeys(onKey) {
 }
 
 export function choose(title, labels) {
-  if (!labels.length) return Promise.reject(new Error("Aucun choix."));
+  if (!labels.length) return Promise.reject(new Error("No choices."));
   if (!process.stdin.isTTY || !process.stdout.isTTY) return numbered(title, labels);
 
   let selected = 0;
@@ -55,7 +55,7 @@ export function choose(title, labels) {
       if (index === selected) process.stdout.write(`\x1b[7m${text}\x1b[0m\x1b[K\n`);
       else process.stdout.write(`${text}\x1b[K\n`);
     });
-    process.stdout.write("\x1b[2m  flèches, entrée · q quitter\x1b[0m\x1b[K\n");
+    process.stdout.write("\x1b[2m  arrows, enter · q quit\x1b[0m\x1b[K\n");
   };
 
   return new Promise((resolve) => {
@@ -85,7 +85,7 @@ export function choose(title, labels) {
 }
 
 export function chooseMany(title, labels) {
-  if (!labels.length) return Promise.reject(new Error("Aucun choix."));
+  if (!labels.length) return Promise.reject(new Error("No choices."));
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
     return numbered(title, labels).then((index) => [index]);
   }
@@ -101,7 +101,7 @@ export function chooseMany(title, labels) {
       if (index === selected) process.stdout.write(`\x1b[7m${text}\x1b[0m\x1b[K\n`);
       else process.stdout.write(`${text}\x1b[K\n`);
     });
-    process.stdout.write("\x1b[2m  espace sélectionne · entrée valide · q quitter\x1b[0m\x1b[K\n");
+    process.stdout.write("\x1b[2m  space selects · enter confirms · q quit\x1b[0m\x1b[K\n");
   };
 
   return new Promise((resolve) => {

@@ -8,16 +8,16 @@ import { ensureIamUser, proxyLabel, reconcileProxies, rememberDatabase, startPro
 import { portOpen } from "./process.js";
 import { ensureTools } from "./tools.js";
 
-const HELP = `dbridge list                  commandes
-dbridge init                  configure les projets et l'interface
-dbridge login                 connexion Google
-dbridge start                 choisit un environnement et une base
+const HELP = `dbridge list                  list commands
+dbridge init                  configure projects and the interface
+dbridge login                 Google sign-in
+dbridge start                 pick an environment and a database
 dbridge start prod
 dbridge start prod speeral
-dbridge status                proxys en cours
-dbridge open                  rouvre l'interface sur un proxy en cours
+dbridge status                running proxies
+dbridge open                  reopen the GUI on a running proxy
 dbridge open prod speeral
-dbridge stop                  arrête un proxy
+dbridge stop                  stop a proxy
 dbridge stop all
 dbridge stop prod speeral
 `;
@@ -25,12 +25,12 @@ dbridge stop prod speeral
 function printConnection(env, instanceName, database, started) {
   console.log();
   console.log(`${env.label} · ${instanceName} · ${database}`);
-  console.log(`proxy ${started.reused ? "déjà lancé" : "lancé"}`);
+  console.log(`proxy ${started.reused ? "already running" : "started"}`);
   console.log("host      127.0.0.1");
   console.log(`port      ${started.port}`);
   console.log(`database  ${database}`);
-  console.log("ssl       désactivé");
-  console.log("Le proxy reste lancé après la fermeture du terminal. dbridge stop pour l'arrêter.");
+  console.log("ssl       off");
+  console.log("The proxy keeps running after the terminal closes. Run dbridge stop to stop it.");
 }
 
 async function databaseRows(env, includeSystem) {
@@ -48,14 +48,14 @@ async function pickDatabase(config, env) {
   let includeSystem = false;
   while (true) {
     const rows = await databaseRows(env, includeSystem);
-    if (!rows.length) throw new Error(`Aucune base sur ${env.label}.`);
+    if (!rows.length) throw new Error(`No databases on ${env.label}.`);
     const proxies = await reconcileProxies();
     const labels = rows.map((row) => {
       const proxy = proxies[row.instance.connectionName];
       const port = proxy ? `  :${proxy.port}` : "";
       return `${row.database.padEnd(22)} ${row.instance.instance}${port}`;
     });
-    if (!includeSystem) labels.push("Afficher les bases système");
+    if (!includeSystem) labels.push("Show system databases");
     const choice = await choose(env.label, labels);
     if (!includeSystem && choice === rows.length) {
       includeSystem = true;
@@ -67,7 +67,7 @@ async function pickDatabase(config, env) {
 
 async function launch(config, env, instance, database) {
   const account = await ensureAuth();
-  if (!account) throw new Error("Aucun compte gcloud actif. Lance : dbridge login");
+  if (!account) throw new Error("No active gcloud account. Run: dbridge login");
   await ensureIamUser(instance.connectionName, account);
   const started = await startProxy(instance.connectionName, env);
   await rememberDatabase(instance.connectionName, database);
@@ -76,28 +76,28 @@ async function launch(config, env, instance, database) {
 }
 
 async function init(existing) {
-  if (!process.stdin.isTTY) throw new Error("dbridge init doit être lancé dans un terminal.");
+  if (!process.stdin.isTTY) throw new Error("dbridge init must be run in a terminal.");
   await ensureTools();
   await ensureAuth();
   if (existing) {
-    const answer = await ask("Une configuration existe. La remplacer ? [o/N] ");
-    if (!/^o(ui)?$/i.test(answer)) return existing;
+    const answer = await ask("A configuration already exists. Replace it? [y/N] ");
+    if (!/^y(es)?$/i.test(answer)) return existing;
   }
   const projects = await gcloudJson(["projects", "list", "--format=json"]);
   const usable = (Array.isArray(projects) ? projects : []).filter((project) => project.projectId);
-  if (!usable.length) throw new Error("Aucun projet GCP visible avec ce compte.");
+  if (!usable.length) throw new Error("No GCP project is visible with this account.");
   const indexes = await chooseMany(
-    "Projets",
+    "Projects",
     usable.map((project) => `${project.projectId}  ${project.name || ""}`.trim()),
   );
   const environments = [];
   for (const index of indexes) {
     const project = usable[index];
-    const suggestedId = slug(project.projectId) || "projet";
-    const id = (await ask(`Identifiant court pour ${project.projectId} [${suggestedId}] : `)) || suggestedId;
-    if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) throw new Error(`Identifiant invalide : ${id}`);
+    const suggestedId = slug(project.projectId) || "project";
+    const id = (await ask(`Short id for ${project.projectId} [${suggestedId}]: `)) || suggestedId;
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) throw new Error(`Invalid id: ${id}`);
     const suggestedLabel = project.name || id;
-    const label = (await ask(`Libellé [${suggestedLabel}] : `)) || suggestedLabel;
+    const label = (await ask(`Label [${suggestedLabel}]: `)) || suggestedLabel;
     environments.push({ id, label, project: project.projectId });
   }
   const interfaces = detectInterfaces();
@@ -108,7 +108,7 @@ async function init(existing) {
     preferredDatabases: existing?.preferredDatabases || [],
   };
   await saveConfig(config);
-  console.log(`Configuration écrite dans ${configFile}`);
+  console.log(`Configuration written to ${configFile}`);
   return config;
 }
 
@@ -116,7 +116,7 @@ async function requireConfig() {
   await ensureTools();
   const config = await loadConfig();
   if (config) return config;
-  console.log("Première utilisation. Configuration des projets et de l'interface.");
+  console.log("First run. Configuring projects and the interface.");
   return init(null);
 }
 
@@ -125,7 +125,7 @@ async function cmdStart(args) {
   await ensureAuth();
   const catalog = await loadCatalog(config);
   if (args.length === 0) {
-    const index = await choose("Environnement", config.environments.map((env) => env.label));
+    const index = await choose("Environment", config.environments.map((env) => env.label));
     const env = envFromCatalog(catalog, config.environments[index].id);
     const row = await pickDatabase(config, env);
     await launch(config, env, row.instance, row.database);
@@ -142,13 +142,13 @@ async function cmdStart(args) {
     await launch(config, env, instance, database);
     return;
   }
-  throw new Error("Utilise : dbridge start [prod speeral]");
+  throw new Error("Usage: dbridge start [prod speeral]");
 }
 
 function describe(config, name, proxy) {
   const env = config?.environments?.find((item) => item.id === proxy.env);
   const label = env?.label || proxy.env || "";
-  const database = proxy.database || "base non précisée";
+  const database = proxy.database || "database not set";
   return `${label} · ${proxy.instance || name} · ${database} · :${proxy.port}`;
 }
 
@@ -156,7 +156,7 @@ async function cmdStatus() {
   const proxies = await reconcileProxies();
   const names = Object.keys(proxies);
   if (!names.length) {
-    console.log("Aucun proxy en cours.");
+    console.log("No proxy is running.");
     return;
   }
   const config = await loadConfig();
@@ -165,8 +165,8 @@ async function cmdStatus() {
 
 async function reopen(config, connectionName, proxy, database) {
   const account = await activeAccount();
-  if (!account) throw new Error("Aucun compte gcloud actif. Lance : dbridge login");
-  if (!(await portOpen(proxy.port))) throw new Error("Ce proxy ne répond plus. Relance-le avec dbridge start.");
+  if (!account) throw new Error("No active gcloud account. Run: dbridge login");
+  if (!(await portOpen(proxy.port))) throw new Error("This proxy is no longer responding. Start it again with dbridge start.");
   await rememberDatabase(connectionName, database);
   const env = config.environments.find((item) => item.id === proxy.env);
   console.log(`${env?.label || proxy.env} · ${proxy.instance} · ${database}`);
@@ -179,27 +179,27 @@ async function cmdOpen(args) {
   const proxies = await reconcileProxies();
   const items = Object.entries(proxies);
   if (!items.length) {
-    console.log("Aucun proxy en cours.");
+    console.log("No proxy is running.");
     return;
   }
   if (args.length === 2) {
     const catalog = await loadCatalog(config);
     const { instance, database } = findTarget(catalog, args[0], args[1]);
     const proxy = proxies[instance.connectionName];
-    if (!proxy) throw new Error(`Aucun proxy pour ${instance.instance}. Lance : dbridge start ${args[0]} ${database}`);
+    if (!proxy) throw new Error(`No proxy for ${instance.instance}. Run: dbridge start ${args[0]} ${database}`);
     await reopen(config, instance.connectionName, proxy, database);
     return;
   }
-  if (args.length) throw new Error("Utilise : dbridge open [prod speeral]");
+  if (args.length) throw new Error("Usage: dbridge open [prod speeral]");
   if (items.length === 1) {
     const [name, proxy] = items[0];
-    if (!proxy.database) throw new Error("Base inconnue pour ce proxy. Précise : dbridge open prod speeral");
+    if (!proxy.database) throw new Error("Unknown database for this proxy. Specify: dbridge open prod speeral");
     await reopen(config, name, proxy, proxy.database);
     return;
   }
-  const choice = await choose("Rouvrir", items.map(([name, proxy]) => describe(config, name, proxy)));
+  const choice = await choose("Reopen", items.map(([name, proxy]) => describe(config, name, proxy)));
   const [name, proxy] = items[choice];
-  if (!proxy.database) throw new Error("Base inconnue pour ce proxy. Précise : dbridge open prod speeral");
+  if (!proxy.database) throw new Error("Unknown database for this proxy. Specify: dbridge open prod speeral");
   await reopen(config, name, proxy, proxy.database);
 }
 
@@ -208,7 +208,7 @@ async function cmdStop(args) {
     const proxies = await reconcileProxies();
     const names = Object.keys(proxies);
     for (const name of names) await stopProxy(name);
-    console.log(names.length ? "Proxys arrêtés." : "Aucun proxy en cours.");
+    console.log(names.length ? "Proxies stopped." : "No proxy is running.");
     return;
   }
   if (args.length === 2) {
@@ -216,19 +216,19 @@ async function cmdStop(args) {
     const catalog = await loadCatalog(config);
     const { instance } = findTarget(catalog, args[0], args[1]);
     await stopProxy(instance.connectionName);
-    console.log(`Proxy arrêté pour ${instance.instance}.`);
+    console.log(`Proxy stopped for ${instance.instance}.`);
     return;
   }
-  if (args.length) throw new Error("Utilise : dbridge stop [all | prod speeral]");
+  if (args.length) throw new Error("Usage: dbridge stop [all | prod speeral]");
   const proxies = await reconcileProxies();
   const items = Object.entries(proxies);
   if (!items.length) {
-    console.log("Aucun proxy en cours.");
+    console.log("No proxy is running.");
     return;
   }
-  const choice = await choose("Arrêter", items.map(([name, proxy]) => proxyLabel(name, proxy)));
+  const choice = await choose("Stop", items.map(([name, proxy]) => proxyLabel(name, proxy)));
   await stopProxy(items[choice][0]);
-  console.log("Proxy arrêté.");
+  console.log("Proxy stopped.");
 }
 
 export async function main(argv) {
@@ -245,7 +245,7 @@ export async function main(argv) {
     await ensureTools();
     await login();
     const account = await ensureAuth();
-    console.log(account || "Connecté.");
+    console.log(account || "Signed in.");
     return;
   }
   if (command === "start") {
