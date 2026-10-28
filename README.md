@@ -7,7 +7,7 @@ Ouvre une base Cloud SQL à travers un proxy local, dans l'interface que tu choi
 Node.js 20 ou plus récent est requis.
 
 ```bash
-git clone https://github.com/maxence-speeral/dbridge.git
+git clone https://github.com/Maxencergn/dbridge.git
 cd dbridge
 npm link
 ```
