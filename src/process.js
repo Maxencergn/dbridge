@@ -66,12 +66,13 @@ export function killProcess(pid) {
   }
 }
 
-export function run(bin, args, { timeout = 90_000, input } = {}) {
+export function run(bin, args, { timeout = 90_000, input, env } = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(bin, args, {
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: true,
       shell: process.platform === "win32" && bin.toLowerCase().endsWith(".cmd"),
+      env,
     });
     const stdout = [];
     const stderr = [];

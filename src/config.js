@@ -6,6 +6,10 @@ export function isSystemDatabase(name) {
   return name === "postgres" || name.startsWith("prisma_") || name === "cloudsqladmin";
 }
 
+export function isLocalEnv(env) {
+  return Boolean(env && !env.project && env.host);
+}
+
 export async function loadConfig() {
   try {
     const config = JSON.parse(await fs.readFile(configFile, "utf8"));

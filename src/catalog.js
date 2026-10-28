@@ -24,8 +24,14 @@ export async function loadCatalog(config, refresh = false) {
   return fetchCatalog(config);
 }
 
+function cloudEnvironments(config) {
+  return config.environments.filter((env) => env.project);
+}
+
 function projectKey(config) {
-  return config.environments.map((env) => `${env.id}=${env.project}`).join(",");
+  return cloudEnvironments(config)
+    .map((env) => `${env.id}=${env.project}`)
+    .join(",");
 }
 
 async function listDatabases(project, instance, preferred) {
@@ -45,7 +51,7 @@ async function listDatabases(project, instance, preferred) {
 export async function fetchCatalog(config) {
   const preferred = config.preferredDatabases || [];
   const listed = await Promise.all(
-    config.environments.map(async (env) => {
+    cloudEnvironments(config).map(async (env) => {
       const payload = await gcloudJson(["sql", "instances", "list", `--project=${env.project}`, "--format=json"]);
       const rows = Array.isArray(payload) ? payload : [];
       const instances = await Promise.all(

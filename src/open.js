@@ -2,8 +2,10 @@ import { spawn } from "node:child_process";
 
 const PLACEHOLDER_PASSWORD = "iam";
 
-export function postgresUrl(username, port, database) {
-  return `postgresql://${encodeURIComponent(username)}:${PLACEHOLDER_PASSWORD}@127.0.0.1:${port}/${encodeURIComponent(database)}?sslmode=disable`;
+export function postgresUrl(username, port, database, options = {}) {
+  const password = options.password ?? PLACEHOLDER_PASSWORD;
+  const host = options.host ?? "127.0.0.1";
+  return `postgresql://${encodeURIComponent(username)}:${encodeURIComponent(password)}@${host}:${port}/${encodeURIComponent(database)}?sslmode=disable`;
 }
 
 function commandRunning(processName) {
@@ -25,8 +27,8 @@ function launch(command) {
   child.unref();
 }
 
-export async function openInterface(email, port, database, iface) {
-  const url = postgresUrl(email, port, database);
+export async function openInterface(email, port, database, iface, options = {}) {
+  const url = postgresUrl(email, port, database, options);
   if (!iface?.command) {
     console.log(url);
     return;
