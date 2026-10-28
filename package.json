@@ -1,0 +1,18 @@
+{
+  "name": "dbridge",
+  "version": "0.1.0",
+  "description": "Ouvre une base Cloud SQL via un proxy local, dans l'interface de ton choix.",
+  "type": "module",
+  "bin": {
+    "dbridge": "./bin/dbridge.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
