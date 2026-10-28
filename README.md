@@ -4,15 +4,21 @@ Open a Cloud SQL database through a local proxy, or a Postgres server already ru
 
 ## Installation
 
-Node.js 20 or newer is required.
+Node.js is not required. The installers download one program for your system.
+
+macOS and Linux:
 
 ```bash
-git clone https://github.com/Maxencergn/dbridge.git
-cd dbridge
-npm link
+curl -fsSL https://raw.githubusercontent.com/Maxencergn/dbridge/main/install.sh | sh
 ```
 
-On the first `dbridge start`, `gcloud` and `cloud-sql-proxy` are downloaded into `~/.local/share/dbridge/tools` if they are not already installed. Official archives are checked against their SHA256 checksum.
+Windows, in PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/Maxencergn/dbridge/main/install.ps1 | iex
+```
+
+macOS and Linux install `~/.local/bin/dbridge`. Windows installs `%LOCALAPPDATA%\dbridge\dbridge.exe` and adds that folder to your user PATH. On the first `dbridge start`, `gcloud` and `cloud-sql-proxy` are downloaded into `~/.local/share/dbridge/tools` if they are not already installed. Official archives are checked against their SHA256 checksum.
 
 ## First run
 
@@ -67,4 +73,16 @@ dbridge stop prod speeral
 
 The proxy keeps running after the terminal closes. `dbridge stop` stops it.
 
-macOS, Windows, and Linux use the same package. The interface is opened with the command stored in the configuration.
+macOS, Windows, and Linux use the same commands. The interface is opened with the command stored in the configuration.
+
+## From source
+
+Running the source directly needs Node.js 20 or newer, or [Bun](https://bun.sh).
+
+```bash
+git clone https://github.com/Maxencergn/dbridge.git
+cd dbridge
+node bin/dbridge.js list
+```
+
+`sh script/build.sh` builds the standalone programs into `dist/`. That step needs Bun.
